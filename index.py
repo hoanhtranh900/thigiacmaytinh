@@ -1,5 +1,6 @@
 #Thêm thư viện tkinter
 from tkinter import *
+import tkinter as tk
 from tkinter import filedialog
 from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
 from tensorflow.keras.preprocessing.image import img_to_array
@@ -11,6 +12,8 @@ import time
 import cv2
 import os
 from pygame import mixer
+from PIL import Image, ImageTk
+
 mixer.init()
 sound = mixer.Sound('alarm.wav')
 
@@ -34,6 +37,7 @@ btn2 = Button(window, text='Webcam', width=20, height=2)
 btn1.pack(side=TOP, pady=10)
 btn2.pack(side=TOP, pady=10)
 
+canvas = Canvas(window,width=500,height=500)
 
 
     
@@ -119,14 +123,30 @@ def selectImage():
     print(filename)
 
 
-    #wait for select image
-    time.sleep(1)
+    # delete current canvas
+    canvas.delete("all")
+
+
+    # if(filename.endswith('.png')):
+    #     photo = PhotoImage(file=filename)
+    #     canvas.create_image(0, 0, anchor=NW, image=photo)
+    #     canvas.image = photo
+    # elif(filename.endswith('.jpg')):
+    #     img = Image.open(filename)
+    #     photo = ImageTk.PhotoImage(img)
+    #     img = img.resize((500,500), Image.ANTIALIAS)
+    #     photo = ImageTk.PhotoImage(img)
+    #     canvas.create_image(0, 0, anchor=NW, image=photo)
+
+
+
     
     image = cv2.imread(filename)
     image = imutils.resize(image, width=400)
     (locs, preds) = detect_and_predict_mask(image, faceNet, maskNet)
     label = "No mask"
     for (box, pred) in zip(locs, preds):
+        (startX, startY, endX, endY) = box
         # unpack the bounding box and predictions
         (mask, withoutMask) = pred
         if mask > withoutMask:
@@ -140,6 +160,12 @@ def selectImage():
         window1.geometry('300x100')
         lbl1 = Label(window1, text=label, font=('Arial Bold', 20))
         lbl1.pack()
+        cv2.rectangle(image, (startX, startY), (endX, endY),
+            (0, 0, 255), 2)
+        img =  ImageTk.PhotoImage(image=Image.fromarray(image))
+        #clear canvas
+        canvas.pack()
+        canvas.create_image(20,20, anchor="nw", image=img)
         window1.mainloop()
     else:
         window2 = Tk()
@@ -147,7 +173,15 @@ def selectImage():
         window2.geometry('300x100')
         lbl2 = Label(window2, text=label, font=('Arial Bold', 20))
         lbl2.pack()
+        cv2.rectangle(image, (startX, startY), (endX, endY),
+            (0, 0, 255), 2)
+        img =  ImageTk.PhotoImage(image=Image.fromarray(image))
+        #clear canvas
+        canvas.pack()
+        canvas.create_image(20,20, anchor="nw", image=img)
         window2.mainloop()
+
+    
 
 
 def detectMaskFromWebcam():
@@ -215,6 +249,7 @@ def detectMaskFromWebcam():
 #add click for btn2
 btn2.config(command=detectMaskFromWebcam)
 btn1.config(command=selectImage)
+
 
 
 
