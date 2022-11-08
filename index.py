@@ -18,7 +18,6 @@ import sys
 mixer.init()
 sound = mixer.Sound('alarm.wav')
 
-
 # Tạo một cửa sổ mới
 window = Tk()
 label1 = None
@@ -156,7 +155,7 @@ def selectImage():
     # canvas.delete("all")
 
     image = cv2.imread(filename)
-    image = cv2.resize(image, (500, 500))
+    image = cv2.resize(image, (300, 300))
     (locs, preds) = detect_and_predict_mask(image, faceNet, maskNet)
     label = "No mask"
     image1 = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -166,8 +165,12 @@ def selectImage():
         (startX, startY, endX, endY) = box
         # unpack the bounding box and predictions
         (mask, withoutMask) = pred
-        label2.configure(text="Result: Mask")
-        label3.configure(text="Accuracy: {:.2f}%".format(mask * 100))
+        if mask > withoutMask:
+            label2.configure(text="Result: Mask")
+            label3.configure(text="Accuracy: {:.2f}%".format(mask * 100))
+        else:
+            label2.configure(text="Result: No Mask")
+            label3.configure(text="Accuracy: {:.2f}%".format(withoutMask * 100))
         cv2.rectangle(edged, (startX, startY), (endX, endY),
                       (0, 0, 255), 2)
         img = ImageTk.PhotoImage(image=Image.fromarray(image1))
@@ -193,15 +196,6 @@ def detectMaskFromWebcam():
     # initialize the video stream and allow the camera sensor to warm up
     print("[INFO] starting video stream...")
 
-    # check if webcam is available if not show popup error
-    if not os.path.exists("/dev/video0"):
-        window3 = Tk()
-        window3.title('Notification')
-        window3.geometry('300x100')
-        lbl3 = Label(window3, text="Webcam not found", font=('Arial Bold', 20))
-        lbl3.pack()
-        window3.mainloop()
-
     vs = VideoStream(src=0).start()
     time.sleep(2.0)
 
@@ -225,7 +219,7 @@ def detectMaskFromWebcam():
 
             # determine the class label and color we'll use to draw
             # the bounding box and text
-            label = "Mask" if mask > withoutMask else "No Mask"
+            label = "Mask" if mask > withoutMask else sound.play()
             color = (0, 255, 0) if label == "Mask" else (0, 0, 255)
 
             # include the probability in the label
